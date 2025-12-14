@@ -32,10 +32,6 @@ mongoose.connection.once('open', () => {
   console.log('Now connected to MongoDB Atlas');
 });
 
-app.use("/user", userRoutes);
-app.use("/flights", flightRoutes);
-app.use("/booking", bookingRoutes);
-
 function generateToken(user) {
   const token = jwt.sign(
     { userId: user._id, username: user.username },
@@ -61,6 +57,10 @@ function authenticateToken(req, res, next) {
   });
 }
 
+app.use("/user", userRoutes);
+app.use("/flights", flightRoutes);
+app.use("/booking", bookingRoutes);
+
 app.get('/protected', authenticateToken, (req, res) => {
   res.send('This is a protected route, and you are authenticated!');
 });
@@ -69,16 +69,9 @@ const staticFilesPath = path.join(__dirname, 'client', 'dist');
 
 app.use(express.static(staticFilesPath));
 
-app.get('*', (req, res) => {
-    const filePath = path.join(staticFilesPath, 'index.html');
-    if (path.extname(req.path) === '' || req.path.indexOf('.') === -1) {
-        res.sendFile(filePath);
-    } else {
-        res.status(404).send('Not Found');
-    }
+app.get('/*', (req, res) => {
+    res.sendFile(path.join(staticFilesPath, 'index.html'));
 });
-
-
 
 app.listen(process.env.PORT || 4000, () => {
   console.log(`API is now online on port ${process.env.PORT || 4000}`);
