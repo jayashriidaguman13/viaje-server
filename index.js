@@ -5,6 +5,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const jwt = require('jsonwebtoken');
+const path = require('path'); 
 
 require('dotenv').config();
 
@@ -16,15 +17,15 @@ const app = express();
 app.use(express.json());
 
 const corsOptions = {
-  origin: "http://localhost:5173",
+  origin: "*",
   credentials: true,
   optionsSuccessStatus: 200
 };
 app.use(cors(corsOptions));
 
-mongoose.connect(process.env.MONGODB_STRING, { 
+mongoose.connect(process.env.MONGODB_STRING, {  
   useNewUrlParser: true,
-  useUnifiedTopology: true 
+  useUnifiedTopology: true  
 });
 
 mongoose.connection.once('open', () => {
@@ -63,6 +64,21 @@ function authenticateToken(req, res, next) {
 app.get('/protected', authenticateToken, (req, res) => {
   res.send('This is a protected route, and you are authenticated!');
 });
+
+const staticFilesPath = path.join(__dirname, 'client', 'dist');
+
+app.use(express.static(staticFilesPath));
+
+app.get('*', (req, res) => {
+    const filePath = path.join(staticFilesPath, 'index.html');
+    if (path.extname(req.path) === '' || req.path.indexOf('.') === -1) {
+        res.sendFile(filePath);
+    } else {
+        res.status(404).send('Not Found');
+    }
+});
+
+
 
 app.listen(process.env.PORT || 4000, () => {
   console.log(`API is now online on port ${process.env.PORT || 4000}`);
